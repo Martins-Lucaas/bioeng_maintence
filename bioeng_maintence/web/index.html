@@ -1,19 +1,6 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <!--
-    If you are serving your web app in a path other than the root, change the
-    href value below to reflect the base path you are serving from.
-
-    The path provided below has to start and end with a slash "/" in order for
-    it to work correctly.
-
-    For more details:
-    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
-
-    This is a placeholder for base href that will be replaced by the value of
-    the `--base-href` argument provided to `flutter build`.
-  -->
   <base href="$FLUTTER_BASE_HREF">
 
   <meta charset="UTF-8">
@@ -31,6 +18,28 @@
 
   <title>bioeng_maintence</title>
   <link rel="manifest" href="manifest.json">
+
+  <!-- Adicionando os scripts do Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js"></script>
+
+  <script>
+    // Configurações do Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyC_p0P4RczIbHWVjhi1u8rMgPCrP4MAf6M",
+      authDomain: "esp32-biomedicaleng.firebaseapp.com",
+      databaseURL: "https://esp32-biomedicaleng-default-rtdb.firebaseio.com",
+      projectId: "esp32-biomedicaleng",
+      storageBucket: "esp32-biomedicaleng.appspot.com",
+      messagingSenderId: "916855352760",
+      appId: "1:916855352760:web:73cc8d198ef4fb8673f34d",
+      measurementId: "G-HSHNQ1MPY6"
+    };
+
+    // Inicializando o Firebase
+    firebase.initializeApp(firebaseConfig);
+  </script>
 </head>
 <body>
   <script src="flutter_bootstrap.js" async></script>
