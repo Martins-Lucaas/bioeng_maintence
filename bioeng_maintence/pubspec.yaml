@@ -30,19 +30,16 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-<<<<<<< HEAD
   firebase_core: ^2.15.0
   firebase_auth: ^4.20.0
   firebase_database: ^10.0.8
   intl: ^0.17.0
   url_launcher: ^6.1.7
-  flutter_barcode_scanner: ^2.0.0
-=======
-
->>>>>>> parent of 55674c1 (configuração banco de dados)
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
+  firebase_auth_web: ^5.8.13
+
   cupertino_icons: ^1.0.6
 
 dev_dependencies:
@@ -67,6 +64,8 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
+  assets:
+    - assets/images/logo.jpg
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg
