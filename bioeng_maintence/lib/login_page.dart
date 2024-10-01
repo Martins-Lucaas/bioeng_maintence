@@ -1,6 +1,8 @@
+import 'package:bioeng_maintence/register_page.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'main.dart';
+
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -153,14 +155,18 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                           ),
                           const SizedBox(height: 20),
-                          // Esqueceu a senha
+                          // Criar Conta
                           Align(
                             alignment: Alignment.center,
                             child: TextButton(
                               onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const RegisterPage()),
+                                );
                               },
                               child: const Text(
-                                'Esqueceu a senha?',
+                                'Criar Conta',
                                 style: TextStyle(
                                   color: Colors.black,
                                   decoration: TextDecoration.underline,
