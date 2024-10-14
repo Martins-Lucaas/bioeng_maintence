@@ -36,7 +36,12 @@ dependencies:
   intl: ^0.17.0
   url_launcher: ^6.1.7
   signature: ^5.5.0
-
+  qr_flutter: ^4.1.0
+  uuid: ^3.0.0
+  uni_links: ^0.5.1
+  pdf: ^3.9.0
+  printing: ^5.10.4
+  
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   firebase_auth_web: ^5.8.13

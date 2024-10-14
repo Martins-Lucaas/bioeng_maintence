@@ -57,7 +57,6 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   final DatabaseReference _databaseReference = FirebaseDatabase.instance.ref();
-  bool _showSetores = false;
   String userName = 'Usuário'; // Variável para armazenar o nome do usuário
 
   @override
@@ -69,20 +68,13 @@ class _MyHomePageState extends State<MyHomePage> {
   void _loadUserData() {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      // Busca o nome do usuário do Firebase (colaboradores ou administradores)
-      _databaseReference.child('colaboradores').child(user.uid).once().then((DatabaseEvent event) {
+      _databaseReference.child('users/colaboradores').child(user.uid).once().then((DatabaseEvent event) {
         if (event.snapshot.exists) {
           setState(() {
             userName = event.snapshot.child('name').value as String? ?? 'Usuário';
           });
         } else {
-          _databaseReference.child('administradores').child(user.uid).once().then((DatabaseEvent event) {
-            if (event.snapshot.exists) {
-              setState(() {
-                userName = event.snapshot.child('name').value as String? ?? 'Usuário';
-              });
-            }
-          });
+          userName = 'Usuário desconhecido';
         }
       });
     }
@@ -92,13 +84,14 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 1,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         title: Text(
           widget.title,
           style: const TextStyle(
             color: Colors.black,
             fontWeight: FontWeight.bold,
+            fontSize: 22,
           ),
         ),
         centerTitle: true,
@@ -118,94 +111,60 @@ class _MyHomePageState extends State<MyHomePage> {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
                 color: Colors.blueAccent.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.blueAccent),
+                borderRadius: BorderRadius.circular(20),
               ),
-              child: Text(
-                userName,
-                style: const TextStyle(
-                  color: Colors.blueAccent,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
+              child: Row(
+                children: [
+                  const Icon(Icons.person, color: Colors.blueAccent),
+                  const SizedBox(width: 5),
+                  Text(
+                    userName,
+                    style: const TextStyle(
+                      color: Colors.blueAccent,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildUserInfo(),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () {
-                  setState(() {
-                    _showSetores = !_showSetores;
-                  });
-                },
-                child: const Text('Selecione o setor'),
-              ),
-              const SizedBox(height: 20),
-              _showSetores ? _buildSetoresSection() : Container(),
-              const SizedBox(height: 20),
-              _buildSectionCard('Rondas Gerais', 'Verifique se todas as rondas foram realizadas.', [
-                'Geral Área 1',
-                'Geral Área 2',
-                'Geral Área 3',
-              ]),
-              const SizedBox(height: 20),
-              _buildSectionCard('Inspeções', 'Detalhes das inspeções realizadas.', [
-                'Hemodinâmica Subsolo',
-                'Hemodinâmica CC',
-                'Gama Câmara',
-                'Ressonância Magnética',
-                'Tomógrafo Toshiba',
-                'Tomógrafo Siemens Oncologia',
-                'Tomógrafo Siemens Subsolo',
-                'Osmose Fixa 01',
-                'Osmose Fixa 02',
-              ]),
-              const SizedBox(height: 20),
-              _buildSectionCard('Ronda Setorial', 'Detalhes das rondas específicas.', [
-                'CME',
-                'CME 2',
-                'Pronto Socorro',
-                'UTI',
-                'CC 1',
-                'CC 2',
-              ]),
-            ],
-          ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 20),
+            _buildSectionCard('Rondas Gerais', 'Verifique se todas as rondas foram realizadas.', [
+              'Geral Área 1',
+              'Geral Área 2',
+              'Geral Área 3',
+            ]),
+            const SizedBox(height: 20),
+            _buildSectionCard('Inspeções', 'Detalhes das inspeções realizadas.', [
+              'Hemodinâmica Subsolo',
+              'Hemodinâmica CC',
+              'Gama Câmara',
+              'Ressonância Magnética',
+              'Tomógrafo Toshiba',
+              'Tomógrafo Siemens Oncologia',
+              'Tomógrafo Siemens Subsolo',
+              'Osmose Fixa 01',
+              'Osmose Fixa 02',
+            ]),
+            const SizedBox(height: 20),
+            _buildSectionCard('Ronda Setorial', 'Detalhes das rondas específicas.', [
+              'CME',
+              'CME 2',
+              'Pronto Socorro',
+              'UTI',
+              'CC 1',
+              'CC 2',
+            ]),
+          ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildUserInfo() {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.blueAccent.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.blueAccent),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.person, color: Colors.blueAccent),
-          const SizedBox(width: 10),
-          Text(
-            userName,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.blueAccent,
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -215,7 +174,7 @@ class _MyHomePageState extends State<MyHomePage> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10),
       ),
-      elevation: 5,
+      elevation: 0, // Removendo o sombreamento
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -238,229 +197,108 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             const SizedBox(height: 12),
             ...items.map(
-              (item) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      item,
-                      style: const TextStyle(
-                        fontSize: 16,
+              (item) => InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) {
+                      switch (item) {
+                        case 'Geral Área 1':
+                          return const GeralArea1Page();
+                        case 'Geral Área 2':
+                          return const GeralArea2Page();
+                        case 'Geral Área 3':
+                          return const GeralArea3Page();
+                        case 'Hemodinâmica Subsolo':
+                          return const HemodinamicaSubsoloPage();
+                        case 'Hemodinâmica CC':
+                          return const HemodinamicaCCPage();
+                        case 'Gama Câmara':
+                          return const GamaCamaraPage();
+                        case 'Ressonância Magnética':
+                          return const RessonanciaMagneticaPage();
+                        case 'Tomógrafo Toshiba':
+                          return const TomografoToshibaPage();
+                        case 'Tomógrafo Siemens Oncologia':
+                          return const TomografoSiemensOncologiaPage();
+                        case 'Tomógrafo Siemens Subsolo':
+                          return const TomografoSiemensSubsoloPage();
+                        case 'Osmose Fixa 01':
+                          return const OsmoseFixa01Page();
+                        case 'Osmose Fixa 02':
+                          return const OsmoseFixa02Page();
+                        case 'CME':
+                          return const CMEPage();
+                        case 'CME 2':
+                          return const CME2Page();
+                        case 'Pronto Socorro':
+                          return const ProntoSocorroPage();
+                        case 'UTI':
+                          return const UTIPage();
+                        case 'CC 1':
+                          return const CC1Page();
+                        case 'CC 2':
+                          return const CC2Page();
+                        default:
+                          return const MyHomePage(title: 'Setor');
+                      }
+                    }),
+                  );
+                },
+                splashFactory: NoSplash.splashFactory, // Remove animação de clique
+                highlightColor: Colors.transparent, // Remove o destaque ao pressionar
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.blueAccent.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: Colors.blueAccent,
+                        width: 1,
                       ),
                     ),
-                    FutureBuilder(
-                      future: _databaseReference.child('setores/${item.toLowerCase().replaceAll(' ', '_')}').once(),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
-                          return const CircularProgressIndicator();
-                        }
-                        if (snapshot.hasData) {
-                          var data = snapshot.data as DatabaseEvent;
-                          bool isCompleted = data.snapshot.child('finalizado').value as bool? ?? false;
-                          String? assinatura = data.snapshot.child('assinatura').value as String?;
-
-                          return Row(
-                            children: [
-                              Icon(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          item,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        FutureBuilder(
+                          future: _databaseReference.child('setores/${item.toLowerCase().replaceAll(' ', '_')}').once(),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState == ConnectionState.waiting) {
+                              return const CircularProgressIndicator();
+                            }
+                            if (snapshot.hasData) {
+                              var data = snapshot.data as DatabaseEvent;
+                              bool isCompleted = data.snapshot.child('finalizado').value as bool? ?? false;
+                              return Icon(
                                 isCompleted ? Icons.check_circle : Icons.cancel,
-                                color: isCompleted ? Colors.green : Colors.red,
-                              ),
-                              const SizedBox(width: 5),
-                              Text(
-                                isCompleted
-                                    ? 'Concluído por: $assinatura'
-                                    : 'Não concluído',
-                                style: TextStyle(
-                                  color: isCompleted ? Colors.green : Colors.red,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          );
-                        } else {
-                          return const Text(
-                            'Não concluído',
-                            style: TextStyle(
-                              color: Colors.red,
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          );
-                        }
-                      },
+                                color: isCompleted ? Colors.green : Colors.red, // Verde se finalizado
+                              );
+                            } else {
+                              return const Icon(
+                                Icons.cancel,
+                                color: Colors.red,
+                              );
+                            }
+                          },
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
             ),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildSetoresSection() {
-    return Card(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
-      ),
-      elevation: 5,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Setores Disponíveis',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 12),
-            buildSetores(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget buildSetores() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        buildSection('Ronda Geral', [
-          'Geral Área 1',
-          'Geral Área 2',
-          'Geral Área 3',
-        ]),
-        const SizedBox(height: 20),
-        buildSection('Inspeção', [
-          'Hemodinâmica Subsolo',
-          'Hemodinâmica CC',
-          'Gama Câmara',
-          'Ressonância Magnética',
-          'Tomógrafo Toshiba',
-          'Tomógrafo Siemens Oncologia',
-          'Tomógrafo Siemens Subsolo',
-          'Osmose Fixa 01',
-          'Osmose Fixa 02',
-        ]),
-        const SizedBox(height: 20),
-        buildSection('Ronda Setorial', [
-          'CME',
-          'CME 2',
-          'Pronto Socorro',
-          'UTI',
-          'CC 1',
-          'CC 2',
-        ]),
-      ],
-    );
-  }
-
-  Widget buildSection(String title, List<String> items) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 10),
-        ...items.map(
-          (item) => GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) {
-                  switch (item) {
-                    case 'Geral Área 1':
-                      return const GeralArea1Page();
-                    case 'Geral Área 2':
-                      return const GeralArea2Page();
-                    case 'Geral Área 3':
-                      return const GeralArea3Page();
-                    case 'Hemodinâmica Subsolo':
-                      return const HemodinamicaSubsoloPage();
-                    case 'Hemodinâmica CC':
-                      return const HemodinamicaCCPage();
-                    case 'Gama Câmara':
-                      return const GamaCamaraPage();
-                    case 'Ressonância Magnética':
-                      return const RessonanciaMagneticaPage();
-                    case 'Tomógrafo Toshiba':
-                      return const TomografoToshibaPage();
-                    case 'Tomógrafo Siemens Oncologia':
-                      return const TomografoSiemensOncologiaPage();
-                    case 'Tomógrafo Siemens Subsolo':
-                      return const TomografoSiemensSubsoloPage();
-                    case 'Osmose Fixa 01':
-                      return const OsmoseFixa01Page();
-                    case 'Osmose Fixa 02':
-                      return const OsmoseFixa02Page();
-                    case 'CME':
-                      return const CMEPage();
-                    case 'CME 2':
-                      return const CME2Page();
-                    case 'Pronto Socorro':
-                      return const ProntoSocorroPage();
-                    case 'UTI':
-                      return const UTIPage();
-                    case 'CC 1':
-                      return const CC1Page();
-                    case 'CC 2':
-                      return const CC2Page();
-                    default:
-                      return const MyHomePage(title: 'Setor');
-                  }
-                }),
-              );
-            },
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4.0),
-              child: Row(
-                children: [
-                  Text(
-                    item,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  FutureBuilder(
-                    future: _databaseReference.child('setores/${item.toLowerCase().replaceAll(' ', '_')}').once(),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const CircularProgressIndicator();
-                      }
-                      if (snapshot.hasData) {
-                        var data = snapshot.data as DatabaseEvent;
-                        bool isCompleted = data.snapshot.child('finalizado').value as bool? ?? false;
-                        return Icon(
-                          isCompleted ? Icons.check_circle : Icons.cancel,
-                          color: isCompleted ? Colors.green : Colors.red,
-                        );
-                      } else {
-                        return const Icon(
-                          Icons.cancel,
-                          color: Colors.red,
-                        );
-                      }
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }
