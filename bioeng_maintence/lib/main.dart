@@ -277,7 +277,17 @@ class _MyHomePageState extends State<MyHomePage> {
                             }
                             if (snapshot.hasData) {
                               var data = snapshot.data as DatabaseEvent;
-                              bool isCompleted = data.snapshot.child('finalizado').value as bool? ?? false;
+                              var finalizadoValue = data.snapshot.child('finalizado').value;
+                              debugPrint('Valor recebido para $item: $finalizadoValue'); // Depuração
+                              
+                              bool isCompleted = false;
+                              if (finalizadoValue is bool) {
+                                isCompleted = finalizadoValue;
+                              } else if (finalizadoValue is String) {
+                                isCompleted = finalizadoValue.toLowerCase() == 'true';
+                              }
+
+
                               return Icon(
                                 isCompleted ? Icons.check_circle : Icons.cancel,
                                 color: isCompleted ? Colors.green : Colors.red, // Verde se finalizado

@@ -9,10 +9,6 @@ import 'package:intl/intl.dart'; // Para formatação da data e hora
 import 'package:pdf/widgets.dart' as pw; // Pacote PDF
 import 'package:printing/printing.dart'; // Pacote para salvar PDF
 
-void main() {
-  runApp(const CC1Page());
-}
-
 class CC1Page extends StatelessWidget {
   const CC1Page({super.key});
 
@@ -48,7 +44,6 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _loadCompletionStatus(); // Carrega o status de conclusão
-    _resetCompletionDaily(); // Reseta o status diariamente
     _loadUserData(); // Carrega o nome do colaborador logado
   }
 
@@ -74,39 +69,21 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('CC1'), // Alterado para CC1
+        title: const Text('CC1'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
-            Navigator.pop(context); // Função de retorno para a página anterior
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => const MyHomePage(title: 'Home')),
+            );
           },
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
-              await _auth.signOut();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Deslogado com sucesso')),
-              );
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (context) => const MyApp()),
-                (route) => false,
-              ); // Retorna à página principal após logout
-            },
-          ),
-        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'QR Code fixo:',
-              style: TextStyle(fontSize: 18),
-            ),
             GestureDetector(
               onTap: () {
                 _showQRCodeDialog(context);
@@ -221,19 +198,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // Função para resetar o status de conclusão todo dia às 00:01
-  void _resetCompletionDaily() {
-    Timer.periodic(const Duration(minutes: 1), (timer) {
-      var now = DateTime.now();
-      if (now.hour == 0 && now.minute == 1) {
-        _database.ref('setores/cc1').update({'finalizado': false});
-        setState(() {
-          isCompleted = false;
-        });
-      }
-    });
-  }
-
   // Pop-up para confirmar a assinatura e conclusão
   void _openSignaturePopup() {
     showDialog(
@@ -282,11 +246,11 @@ class _HomePageState extends State<HomePage> {
 
   // Carrega o status de conclusão do setor
   void _loadCompletionStatus() {
-    _database.ref('setores/cc1').once().then((DatabaseEvent event) {
+    _database.ref('setores/cc1/finalizado').once().then((DatabaseEvent event) {
       if (event.snapshot.exists) {
         setState(() {
           isCompleted =
-              event.snapshot.child('finalizado').value as bool? ?? false;
+              event.snapshot.value as bool? ?? false;
         });
       }
     });
@@ -302,7 +266,9 @@ class _HomePageState extends State<HomePage> {
 
         _database.ref('setores/cc1').set({
           'finalizado': true,
-          'assinatura': signatureData,
+          'assinatura': {
+            'imagem': signatureData,
+          },
           'data_hora': dateTime,
           'colaborador': userName,
         }).then((_) {

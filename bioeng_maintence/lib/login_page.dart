@@ -1,7 +1,9 @@
 import 'package:bioeng_maintence/register_page.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'main.dart';
+import 'adm_main_page.dart'; // Certifique-se de importar a página do administrador
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -14,21 +16,44 @@ class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final DatabaseReference _databaseReference = FirebaseDatabase.instance.ref(); // Referência ao Firebase Realtime Database
 
   Future<void> _login() async {
     try {
+      // Realiza o login com o email e senha fornecidos
       await _auth.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Login realizado com sucesso!')),
-      );
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const MyHomePage(title: 'Página Inicial')),
-      );
+      
+      User? user = _auth.currentUser;
+
+      // Verifica se o usuário é um administrador ou colaborador
+      if (user != null) {
+        DatabaseEvent adminCheck = await _databaseReference.child('users/administradores').child(user.uid).once();
+        
+        if (adminCheck.snapshot.exists) {
+          // Se o usuário for um administrador, redireciona para a página do administrador
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Login de administrador realizado com sucesso!')),
+          );
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const AdmMainPage()), // Redireciona para a página do administrador
+          );
+        } else {
+          // Se não for administrador, redireciona para a página principal do colaborador
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Login de colaborador realizado com sucesso!')),
+          );
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const MyHomePage(title: 'Página Inicial')), // Redireciona para a página do colaborador
+          );
+        }
+      }
     } catch (e) {
+      // Exibe uma mensagem de erro se houver falha no login
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Falha ao fazer login: $e')),
       );
