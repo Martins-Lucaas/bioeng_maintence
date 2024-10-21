@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'dart:typed_data'; // Para exibir a imagem da assinatura
+import 'dart:typed_data'; // Importação para manipular dados binários (exibição da imagem da assinatura)
+import 'package:bioeng_maintence/login_page.dart';  // Importa a página de login
 
+// Página principal para o administrador
 class AdmMainPage extends StatefulWidget {
   const AdmMainPage({super.key});
 
@@ -11,17 +13,18 @@ class AdmMainPage extends StatefulWidget {
 }
 
 class _AdmMainPageState extends State<AdmMainPage> {
-  final DatabaseReference _databaseReference = FirebaseDatabase.instance.ref();
-  String userName = 'Administrador';
-  Map<String, bool> setoresStatus = {};
+  final DatabaseReference _databaseReference = FirebaseDatabase.instance.ref(); // Referência ao Realtime Database do Firebase
+  String userName = 'Administrador'; // Nome do usuário administrador exibido no topo da página
+  Map<String, bool> setoresStatus = {}; // Armazena o status de finalização de cada setor
 
   @override
   void initState() {
     super.initState();
-    _loadUserData();
-    _listenForDatabaseChanges();
+    _loadUserData(); // Carrega os dados do usuário ao iniciar a página
+    _listenForDatabaseChanges(); // Escuta alterações no banco de dados em tempo real
   }
 
+  // Função para carregar o nome do administrador do Firebase
   void _loadUserData() {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
@@ -37,6 +40,7 @@ class _AdmMainPageState extends State<AdmMainPage> {
     }
   }
 
+  // Função que escuta as mudanças no status dos setores em tempo real
   void _listenForDatabaseChanges() {
     _databaseReference.child('setores').onValue.listen((event) {
       if (event.snapshot.exists) {
@@ -44,53 +48,65 @@ class _AdmMainPageState extends State<AdmMainPage> {
         setState(() {
           setoresStatus.clear();
           setores.forEach((key, value) {
-            setoresStatus[key] = value['finalizado'] ?? false;
+            setoresStatus[key] = value['finalizado'] ?? false; // Atualiza o status de finalização de cada setor
           });
         });
       }
     });
   }
 
-  // Função para carregar os dados do setor e exibir no popup
+  // Função que exibe os detalhes de um setor em um pop-up (incluindo a assinatura, se houver)
   Future<void> _showSectorDetails(String setor) async {
     final snapshot = await _databaseReference.child('setores/$setor').once();
+
     if (snapshot.snapshot.exists) {
       Map setorData = snapshot.snapshot.value as Map;
 
-      String colaborador = setorData['colaborador'] ?? 'N/A';
-      String dataHora = setorData['data_hora'] ?? 'N/A';
-      bool finalizado = setorData['finalizado'] == true;
+      String colaborador = setorData['colaborador'] ?? 'N/A'; // Nome do colaborador responsável
+      String dataHora = setorData['data_hora'] ?? 'N/A'; // Data e hora da finalização
+      bool finalizado = setorData['finalizado'] == true; // Status de finalização
 
-      // Carregar assinatura como lista de inteiros (bytes)
+      // Carrega a assinatura, se disponível
       Uint8List? assinaturaBytes;
       if (setorData['assinatura'] != null && setorData['assinatura']['imagem'] != null) {
         assinaturaBytes = Uint8List.fromList(List<int>.from(setorData['assinatura']['imagem']));
       }
 
-      // Verifica se o setor é "ressonancia_magnetica" e, se for, carrega a tabela
-      List<TableRow> tableRows = [];
+      List<Widget> planilhaRows = [];
+      // Verifica se o setor é "ressonância magnética" e carrega os dados da tabela
       if (setor == 'ressonancia_magnetica') {
         final tabelaSnapshot = await _databaseReference.child('setores/ressonancia_magnetica/tabela').once();
+
         if (tabelaSnapshot.snapshot.exists) {
           Map<dynamic, dynamic> tabelaData = tabelaSnapshot.snapshot.value as Map<dynamic, dynamic>;
+
+          // Gera as linhas com os dados da planilha
           tabelaData.forEach((key, value) {
             final rowData = value as Map;
-            tableRows.add(
-              TableRow(
-                children: [
-                  Text('$key', textAlign: TextAlign.center),
-                  Text('${rowData['nivelHelio'] ?? ''}', textAlign: TextAlign.center),
-                  Text('${rowData['horimetro'] ?? ''}', textAlign: TextAlign.center),
-                  Text('${rowData['pressao'] ?? ''}', textAlign: TextAlign.center),
-                  Text('${rowData['temperatura'] ?? ''}', textAlign: TextAlign.center),
-                  Text('${rowData['umidade'] ?? ''}', textAlign: TextAlign.center),
-                ],
+            String dataFinalizacao = rowData['data_hora'] ?? 'Data não disponível';
+
+            planilhaRows.add(
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Data de Finalização: $dataFinalizacao', style: const TextStyle(fontWeight: FontWeight.bold)),
+                    Text('Nível de Hélio (%): ${rowData['nivelHelio'] ?? 'N/A'}'),
+                    Text('Horímetro (KHr): ${rowData['horimetro'] ?? 'N/A'}'),
+                    Text('Pressão (Psi): ${rowData['pressao'] ?? 'N/A'}'),
+                    Text('Temperatura (ºC): ${rowData['temperatura'] ?? 'N/A'}'),
+                    Text('Umidade (%): ${rowData['umidade'] ?? 'N/A'}'),
+                    const Divider(),
+                  ],
+                ),
               ),
             );
           });
         }
       }
 
+      // Exibe o pop-up com as informações do setor
       showDialog(
         context: context,
         builder: (BuildContext context) {
@@ -99,44 +115,20 @@ class _AdmMainPageState extends State<AdmMainPage> {
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('Colaborador: $colaborador'),
                   Text('Data/Hora: $dataHora'),
                   Text('Finalizado: ${finalizado ? "Sim" : "Não"}'),
                   const SizedBox(height: 10),
                   assinaturaBytes != null
-                      ? Image.memory(assinaturaBytes) // Exibe a imagem da assinatura
-                      : const Text('Sem assinatura disponível'), // Exibe uma mensagem se a assinatura não estiver disponível
+                      ? Image.memory(assinaturaBytes) // Exibe a assinatura, se disponível
+                      : const Text('Sem assinatura disponível'),
                   const SizedBox(height: 20),
                   if (setor == 'ressonancia_magnetica') ...[
-                    const Text('Tabela de Ressonância Magnética', style: TextStyle(fontWeight: FontWeight.bold)),
+                    const Text('Dados da Ressonância Magnética', style: TextStyle(fontWeight: FontWeight.bold)),
                     const SizedBox(height: 10),
-                    Table(
-                      border: TableBorder.all(),
-                      columnWidths: const <int, TableColumnWidth>{
-                        0: FlexColumnWidth(1),
-                        1: FlexColumnWidth(2),
-                        2: FlexColumnWidth(2),
-                        3: FlexColumnWidth(2),
-                        4: FlexColumnWidth(2),
-                        5: FlexColumnWidth(2),
-                      },
-                      defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-                      children: [
-                        TableRow(
-                          decoration: const BoxDecoration(color: Colors.grey),
-                          children: const [
-                            Padding(padding: EdgeInsets.all(8), child: Text('Linha', textAlign: TextAlign.center)),
-                            Padding(padding: EdgeInsets.all(8), child: Text('Nível de Hélio (%)', textAlign: TextAlign.center)),
-                            Padding(padding: EdgeInsets.all(8), child: Text('Horímetro (KHr)', textAlign: TextAlign.center)),
-                            Padding(padding: EdgeInsets.all(8), child: Text('Pressão (Psi)', textAlign: TextAlign.center)),
-                            Padding(padding: EdgeInsets.all(8), child: Text('Temperatura (ºC)', textAlign: TextAlign.center)),
-                            Padding(padding: EdgeInsets.all(8), child: Text('Umidade (%)', textAlign: TextAlign.center)),
-                          ],
-                        ),
-                        ...tableRows, // Exibe as linhas da tabela dinamicamente
-                      ],
-                    ),
+                    ...planilhaRows,
                   ],
                 ],
               ),
@@ -151,7 +143,7 @@ class _AdmMainPageState extends State<AdmMainPage> {
         },
       );
     } else {
-      // Se não houver dados para o setor
+      // Exibe um pop-up de erro caso não haja dados disponíveis para o setor
       showDialog(
         context: context,
         builder: (BuildContext context) {
@@ -170,15 +162,20 @@ class _AdmMainPageState extends State<AdmMainPage> {
     }
   }
 
-  // Cancela a finalização individual de um setor
+  // Função para cancelar a finalização de um setor
   void _cancelFinalization(String setor) {
     _databaseReference.child('setores/$setor').update({'finalizado': false});
   }
 
   // Função de logout
   Future<void> _logout() async {
-    await FirebaseAuth.instance.signOut();
-    Navigator.of(context).pushReplacementNamed('/login'); // Navega para a tela de login após o logout
+    await FirebaseAuth.instance.signOut(); // Desconecta o usuário do Firebase
+
+    // Redireciona para a página de login após o logout
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginPage()),
+    );
   }
 
   @override
@@ -186,7 +183,7 @@ class _AdmMainPageState extends State<AdmMainPage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.blueAccent,
-        elevation: 0,
+        elevation: 0, // Remove a sombra do AppBar
         title: const Text(
           'Painel de Administração',
           style: TextStyle(
@@ -195,12 +192,13 @@ class _AdmMainPageState extends State<AdmMainPage> {
             fontSize: 22,
           ),
         ),
-        centerTitle: true,
+        centerTitle: true, // Centraliza o título no AppBar
         leading: IconButton(
           icon: const Icon(Icons.logout),
           onPressed: _logout, // Ação para deslogar
         ),
         actions: [
+          // Exibe o nome do usuário no canto superior direito
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Container(
@@ -229,8 +227,8 @@ class _AdmMainPageState extends State<AdmMainPage> {
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
-          double horizontalPadding = constraints.maxWidth * 0.05; // 5% do tamanho da tela
-          double fontSize = constraints.maxWidth * 0.04; // Tamanho relativo para o texto
+          double horizontalPadding = constraints.maxWidth * 0.05; // Define o padding horizontal
+          double fontSize = constraints.maxWidth * 0.04; // Define o tamanho da fonte com base na largura da tela
 
           return SingleChildScrollView(
             padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 20.0),
@@ -238,6 +236,7 @@ class _AdmMainPageState extends State<AdmMainPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 20),
+                // Seção de Rondas Gerais
                 _buildSectionCard(
                   'Rondas Gerais',
                   'Verifique as rondas e controle suas finalizações.',
@@ -245,6 +244,7 @@ class _AdmMainPageState extends State<AdmMainPage> {
                   fontSize,
                 ),
                 const SizedBox(height: 20),
+                // Seção de Inspeções
                 _buildSectionCard(
                   'Inspeções',
                   'Controle as inspeções e suas finalizações.',
@@ -262,6 +262,7 @@ class _AdmMainPageState extends State<AdmMainPage> {
                   fontSize,
                 ),
                 const SizedBox(height: 20),
+                // Seção de Rondas Setoriais
                 _buildSectionCard(
                   'Rondas Setoriais',
                   'Gerencie rondas setoriais e suas finalizações.',
@@ -276,28 +277,29 @@ class _AdmMainPageState extends State<AdmMainPage> {
     );
   }
 
-  // Função para criar um card de seção com os setores
+  // Função para construir os cartões de cada seção
   Widget _buildSectionCard(String title, String description, List<String> setores, double fontSize) {
     return Card(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10),
       ),
-      elevation: 5,
+      elevation: 5, // Sombra do cartão
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              title,
+              title, // Título da seção
               style: TextStyle(fontSize: fontSize * 1.2, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(
-              description,
+              description, // Descrição da seção
               style: TextStyle(fontSize: fontSize, color: Colors.black54),
             ),
             const SizedBox(height: 12),
+            // Para cada setor, cria um item na lista
             ...setores.map((setor) => _buildSetorItem(setor, fontSize)),
           ],
         ),
@@ -305,9 +307,9 @@ class _AdmMainPageState extends State<AdmMainPage> {
     );
   }
 
-  // Função para criar o item de setor com botão para exibir popup de detalhes
+  // Função para construir o item de cada setor com o botão de cancelar a finalização
   Widget _buildSetorItem(String setor, double fontSize) {
-    bool isFinalizado = setoresStatus[setor] ?? false;
+    bool isFinalizado = setoresStatus[setor] ?? false; // Verifica se o setor está finalizado
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -315,23 +317,25 @@ class _AdmMainPageState extends State<AdmMainPage> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           InkWell(
-            onTap: () => _showSectorDetails(setor), // Exibir pop-up ao clicar no setor
+            onTap: () => _showSectorDetails(setor), // Ao clicar, exibe os detalhes do setor
             child: Text(
-              setor.replaceAll('_', ' ').toUpperCase(),
+              setor.replaceAll('_', ' ').toUpperCase(), // Formata o nome do setor para exibição
               style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.w600, color: Colors.blue),
             ),
           ),
           Row(
             children: [
+              // Exibe um ícone de check se finalizado, ou um ícone de cancel se não finalizado
               Icon(
                 isFinalizado ? Icons.check_circle : Icons.cancel,
                 color: isFinalizado ? Colors.green : Colors.red,
               ),
               const SizedBox(width: 10),
+              // Botão para cancelar a finalização do setor
               ElevatedButton(
                 onPressed: () => _cancelFinalization(setor),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.redAccent,
+                  backgroundColor: Colors.redAccent, // Cor vermelha do botão
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),

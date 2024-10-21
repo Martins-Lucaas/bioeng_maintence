@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:signature/signature.dart';
-import 'package:qr_flutter/qr_flutter.dart';
-import 'package:intl/intl.dart';
-import 'package:pdf/widgets.dart' as pw;
-import 'package:printing/printing.dart';
+import 'package:signature/signature.dart'; // Biblioteca para captura de assinaturas
+import 'package:qr_flutter/qr_flutter.dart'; // Biblioteca para gerar QR codes
+import 'package:intl/intl.dart'; // Biblioteca para formatação de datas
+import 'package:pdf/widgets.dart' as pw; // Biblioteca para manipulação de PDFs
+import 'package:printing/printing.dart'; // Biblioteca para impressão e exportação de PDFs
 
+// Página principal da Ressonância Magnética
 class RessonanciaMagneticaPage extends StatefulWidget {
   const RessonanciaMagneticaPage({super.key});
 
@@ -15,27 +16,27 @@ class RessonanciaMagneticaPage extends StatefulWidget {
 }
 
 class _RessonanciaMagneticaPageState extends State<RessonanciaMagneticaPage> {
-  bool isCompleted = false;
-  final DatabaseReference _databaseReference = FirebaseDatabase.instance.ref();
-  final SignatureController _signatureController = SignatureController(penStrokeWidth: 5, penColor: Colors.black);
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  bool isCompleted = false; // Indica se o setor foi finalizado
+  final DatabaseReference _databaseReference = FirebaseDatabase.instance.ref(); // Referência ao banco de dados Firebase
+  final SignatureController _signatureController = SignatureController(penStrokeWidth: 5, penColor: Colors.black); // Controlador para captura de assinaturas
+  final FirebaseAuth _auth = FirebaseAuth.instance; // Autenticação do Firebase
   User? currentUser;
-  String userName = 'Usuário';
-  final String _qrData = 'app://setor/ressonancia_magnetica'; // QR code fixo para deep link
+  String userName = 'Usuário'; // Nome do usuário logado
+  final String _qrData = 'app://setor/ressonancia_magnetica'; // Dados do QR code para deep link
 
-  List<TableRow> tableRows = [];
-  final Map<String, TextEditingController> _controllers = {};
+  List<TableRow> tableRows = []; // Linhas da tabela
+  final Map<String, TextEditingController> _controllers = {}; // Controladores dos campos da tabela
 
   @override
   void initState() {
     super.initState();
-    _loadCompletionStatus();
-    _loadUserData();
+    _loadCompletionStatus(); // Carrega o status de finalização do setor
+    _loadUserData(); // Carrega os dados do usuário
     _initializeTableRows(); // Inicializa as linhas da tabela
-    _listenForTableChanges(); // Adiciona o listener para monitorar mudanças na tabela
+    _listenForTableChanges(); // Monitora mudanças na tabela em tempo real
   }
 
-  // Método para inicializar as linhas da tabela
+  // Método para inicializar as linhas da tabela a partir do Firebase
   void _initializeTableRows() async {
     DataSnapshot snapshot = await _databaseReference.child('setores/ressonancia_magnetica/tabela').get();
     
@@ -47,7 +48,7 @@ class _RessonanciaMagneticaPageState extends State<RessonanciaMagneticaPage> {
         
         setState(() {
           tableRows.add(
-            tableRow('$key', rowData, isRowCompleted), // Utiliza o método tableRow para adicionar uma linha
+            tableRow('$key', rowData, isRowCompleted), // Adiciona uma linha da tabela
           );
         });
       });
@@ -55,7 +56,7 @@ class _RessonanciaMagneticaPageState extends State<RessonanciaMagneticaPage> {
     _addNewTableRow(); // Sempre adiciona uma nova linha editável ao final
   }
 
-  // Adiciona o listener para detectar mudanças na tabela no Firebase
+  // Monitora mudanças na tabela do Firebase em tempo real
   void _listenForTableChanges() {
     _databaseReference.child('setores/ressonancia_magnetica/tabela').onValue.listen((event) {
       final data = event.snapshot.value as Map<dynamic, dynamic>;
@@ -71,7 +72,7 @@ class _RessonanciaMagneticaPageState extends State<RessonanciaMagneticaPage> {
     });
   }
 
-  // Adiciona uma nova linha editável ao final
+  // Adiciona uma nova linha editável na tabela
   void _addNewTableRow() {
     final newIndex = tableRows.length + 1;
     setState(() {
@@ -83,7 +84,7 @@ class _RessonanciaMagneticaPageState extends State<RessonanciaMagneticaPage> {
           'temperatura': '',
           'umidade': '',
           'finalizado': false,
-        }, false), // Adiciona uma nova linha editável
+        }, false),
       );
     });
 
@@ -99,6 +100,7 @@ class _RessonanciaMagneticaPageState extends State<RessonanciaMagneticaPage> {
     });
   }
 
+  // Carrega os dados do usuário logado
   void _loadUserData() {
     currentUser = _auth.currentUser;
     if (currentUser != null) {
@@ -112,6 +114,7 @@ class _RessonanciaMagneticaPageState extends State<RessonanciaMagneticaPage> {
     }
   }
 
+  // Carrega o status de finalização do setor
   void _loadCompletionStatus() {
     _databaseReference.child('setores/ressonancia_magnetica/finalizado').once().then((DatabaseEvent event) {
       if (event.snapshot.exists) {
@@ -122,7 +125,7 @@ class _RessonanciaMagneticaPageState extends State<RessonanciaMagneticaPage> {
     });
   }
 
-  // Função para renderizar o header da tabela
+  // Função que cria o cabeçalho da tabela
   Widget tableHeader(String title) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
@@ -162,11 +165,11 @@ class _RessonanciaMagneticaPageState extends State<RessonanciaMagneticaPage> {
     cellRef.set(value);
   }
 
-  // Função para renderizar as linhas da tabela
+  // Função que cria uma linha da tabela
   TableRow tableRow(String rowIndex, Map rowData, bool isRowCompleted) {
     return TableRow(
       children: [
-        Text(rowIndex, textAlign: TextAlign.center),
+        Text(rowIndex, textAlign: TextAlign.center), // Índice da linha
         editableCell(rowIndex, 'nivelHelio', rowData['nivelHelio'] ?? '', isRowCompleted),
         editableCell(rowIndex, 'horimetro', rowData['horimetro'] ?? '', isRowCompleted),
         editableCell(rowIndex, 'pressao', rowData['pressao'] ?? '', isRowCompleted),
@@ -176,7 +179,7 @@ class _RessonanciaMagneticaPageState extends State<RessonanciaMagneticaPage> {
     );
   }
 
-  // Exibe o QR Code em uma tela ampliada e dá a opção de salvar como PDF
+  // Função que exibe o QR Code e permite salvar como PDF
   void _showQRCodeDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -237,6 +240,7 @@ class _RessonanciaMagneticaPageState extends State<RessonanciaMagneticaPage> {
     );
   }
 
+  // Função que exibe o pop-up de assinatura
   void _openSignaturePopup() {
     showDialog(
       context: context,
@@ -282,7 +286,7 @@ class _RessonanciaMagneticaPageState extends State<RessonanciaMagneticaPage> {
     );
   }
 
-  // Função que salva os dados e adiciona uma nova linha
+  // Função que salva a assinatura e atualiza o status de finalização
   void _saveCompletionStatus() async {
     if (_signatureController.isNotEmpty) {
       var signatureData = await _signatureController.toPngBytes();
@@ -305,13 +309,14 @@ class _RessonanciaMagneticaPageState extends State<RessonanciaMagneticaPage> {
         });
 
         setState(() {
-          isCompleted = true;
+          isCompleted = true; // Marca o setor como finalizado
         });
 
         // Adicionando uma nova linha vazia após a finalização
         _addNewTableRow();
 
         // Fechar o pop-up de assinatura
+        // ignore: use_build_context_synchronously
         Navigator.of(context).pop();
       }
     }
@@ -319,22 +324,20 @@ class _RessonanciaMagneticaPageState extends State<RessonanciaMagneticaPage> {
 
   @override
   void dispose() {
-    _signatureController.dispose();
-    _controllers.forEach((key, controller) => controller.dispose());
+    _signatureController.dispose(); // Limpa o controlador de assinatura ao finalizar
+    _controllers.forEach((key, controller) => controller.dispose()); // Limpa os controladores da tabela
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('RESSONÂNCIA MAGNÉTICA GE SIGNA HDXT'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
-            Navigator.of(context).pop(); // Retornar para a página anterior
+            Navigator.of(context).pop(); // Retorna para a página anterior
           },
         ),
       ),
@@ -366,7 +369,7 @@ class _RessonanciaMagneticaPageState extends State<RessonanciaMagneticaPage> {
               ],
             ),
             const SizedBox(height: 10),
-            // Tabela editável
+            // Tabela editável com os dados
             Table(
               border: TableBorder.all(),
               columnWidths: const <int, TableColumnWidth>{
