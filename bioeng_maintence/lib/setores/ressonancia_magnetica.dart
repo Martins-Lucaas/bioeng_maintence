@@ -51,9 +51,8 @@ class _RessonanciaMagneticaPageState extends State<RessonanciaMagneticaPage> {
           );
         });
       });
-    } else {
-      _addNewTableRow(); // Se não houver linhas, adiciona uma nova linha
     }
+    _addNewTableRow(); // Sempre adiciona uma nova linha editável ao final
   }
 
   // Adiciona o listener para detectar mudanças na tabela no Firebase
@@ -72,11 +71,10 @@ class _RessonanciaMagneticaPageState extends State<RessonanciaMagneticaPage> {
     });
   }
 
-  // Adiciona uma nova linha após finalizar
+  // Adiciona uma nova linha editável ao final
   void _addNewTableRow() {
+    final newIndex = tableRows.length + 1;
     setState(() {
-      final newIndex = tableRows.length + 1;
-      // Adiciona uma nova linha à tabela
       tableRows.add(
         tableRow('linha$newIndex', {
           'nivelHelio': '',
@@ -85,19 +83,19 @@ class _RessonanciaMagneticaPageState extends State<RessonanciaMagneticaPage> {
           'temperatura': '',
           'umidade': '',
           'finalizado': false,
-        }, false),
+        }, false), // Adiciona uma nova linha editável
       );
     });
 
     // Salva a nova linha no Firebase
-    final newRowRef = _databaseReference.child('setores/ressonancia_magnetica/tabela').child('linha${tableRows.length}');
+    final newRowRef = _databaseReference.child('setores/ressonancia_magnetica/tabela').child('linha$newIndex');
     newRowRef.set({
       'nivelHelio': '',
       'horimetro': '',
       'pressao': '',
       'temperatura': '',
       'umidade': '',
-      'finalizado': false, // Define que a nova linha ainda não foi finalizada
+      'finalizado': false,
     });
   }
 
@@ -291,23 +289,30 @@ class _RessonanciaMagneticaPageState extends State<RessonanciaMagneticaPage> {
       if (signatureData != null) {
         String dateTime = DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
 
-        // Salvando os dados no formato solicitado
-        final completionRef = _databaseReference.child('setores/ressonancia_magnetica');
+        // Gerando um novo índice baseado no número de linhas existentes
+        final newIndex = tableRows.length;
+
+        // Salvando os dados finalizados na linha existente
+        final completionRef = _databaseReference.child('setores/ressonancia_magnetica/tabela/linha$newIndex');
         
-        completionRef.set({
+        await completionRef.update({
           'finalizado': true,
           'assinatura': {
             'imagem': signatureData,  // Assinatura em PNG
           },
           'colaborador': userName, // Nome do colaborador
           'data_hora': dateTime, // Data e hora da assinatura
-        }).then((_) {
-          setState(() {
-            isCompleted = true;
-          });
-          _addNewTableRow(); // Adiciona uma nova linha após finalização
-          Navigator.of(context).pop(); // Fechar o pop-up
         });
+
+        setState(() {
+          isCompleted = true;
+        });
+
+        // Adicionando uma nova linha vazia após a finalização
+        _addNewTableRow();
+
+        // Fechar o pop-up de assinatura
+        Navigator.of(context).pop();
       }
     }
   }
@@ -321,6 +326,8 @@ class _RessonanciaMagneticaPageState extends State<RessonanciaMagneticaPage> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('RESSONÂNCIA MAGNÉTICA GE SIGNA HDXT'),
