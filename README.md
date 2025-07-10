@@ -122,7 +122,3 @@ Escolha o padrão de acordo com a complexidade e necessidade de testes do seu ti
 5. Abra um *Pull Request*.
 
 ---
-
-## Licença
-
-Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
