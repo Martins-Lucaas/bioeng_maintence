@@ -1,4 +1,4 @@
-# Engenharia Clínica 2
+# bioeng\_maintence
 
 Este repositório contém o aplicativo **Engenharia Clínica 2**, desenvolvido em Flutter, que gerencia rondas e inspeções de setores hospitalares utilizando **Firebase Auth** e **Realtime Database**.
 
@@ -34,7 +34,8 @@ Este repositório contém o aplicativo **Engenharia Clínica 2**, desenvolvido e
 1. **Clone o repositório**:
 
    ```bash
-   git clone https://github.com/seu-usuario/engenharia-clinica-2.git
+   git clone https://github.com/seu-usuario/bioeng_maintence.git
+   cd bioeng_maintence
    cd engenharia-clinica-2
    ```
 
