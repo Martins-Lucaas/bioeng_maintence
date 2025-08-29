@@ -5,7 +5,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'firebase_options.dart';
 import 'login_page.dart';
 
-// Importando todas as páginas dos setores
+// Importando todas as páginas dos setores teste
 import 'setores/geral_area1.dart';
 import 'setores/geral_area2.dart';
 import 'setores/geral_area3.dart';
