@@ -24,7 +24,7 @@ Este repositório contém o aplicativo **Engenharia Clínica 2**, desenvolvido e
 * Conta no Firebase com projeto configurado
 * Ferramentas:
 
-  * Android Studio / VS Code
+  * Android Studio narwhal/ VS Code
   * Emulador Android / dispositivo físico
 
 ---
