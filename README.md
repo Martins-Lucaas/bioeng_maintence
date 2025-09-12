@@ -11,7 +11,6 @@ Aplicativo desenvolvido em Flutter, que gerencia rondas e inspeções de setores
 * **Assinatura digital**: captura de assinatura com o widget `Signature` e armazenamento em PNG.
 * **Geração de QR Code**: criação de QR Code para cada setor, com opção de salvar como PDF.
 * **Cancelamento de finalização**: administradores podem reverter o status de finalização de setores.
-* **Perfil de usuário**: exibição de informações básicas do colaborador.
 
 ---
 
