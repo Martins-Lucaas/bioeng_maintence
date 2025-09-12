@@ -1,6 +1,4 @@
-# bioeng\_maintence
-
-Este repositório contém o aplicativo **Engenharia Clínica 2**, desenvolvido em Flutter, que gerencia rondas e inspeções de setores hospitalares utilizando **Firebase Auth** e **Realtime Database**.
+Aplicativo desenvolvido em Flutter, que gerencia rondas e inspeções de setores hospitalares utilizando **Firebase Auth** e **Realtime Database**.
 
 ---
 
