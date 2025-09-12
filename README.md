@@ -100,17 +100,6 @@ lib/
 
 ---
 
-## Padrão de Arquitetura
-
-Este projeto pode ser organizado em **MVVM** ou **BLoC**:
-
-* **MVVM**: utiliza `ChangeNotifier` + `Provider` para expor estados de `ViewModel` às páginas.
-* **BLoC**: define `Events` e `States` para cada fluxo (autenticação, setores, assinatura).
-
-Escolha o padrão de acordo com a complexidade e necessidade de testes do seu time.
-
----
-
 ## Contribuindo
 
 1. Faça um *fork* deste repositório.
